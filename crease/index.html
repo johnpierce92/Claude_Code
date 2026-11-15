@@ -2,176 +2,187 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Crease — the folding map game</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Crease</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+/* Layout: atlas plate on the left, clue sheet on the right; stacks on phones. */
 :root{
-  --paper:#f4eedf; --paper-2:#ebe3cf; --sea:#e6dcc4; --grid:#d6c9aa;
-  --ink:#24303f; --ink-2:#5b6472; --line:#cdbf9f;
-  --land:#7d9b76; --land-hi:#5f8159; --land-sel:#d97a3c; --gone:#cfc4a8;
-  --accent:#c4562b; --ok:#3f7d4e; --bad:#b03a2e; --card:#fbf8f0;
-  --shadow:0 1px 2px rgba(60,45,20,.08),0 6px 24px rgba(60,45,20,.10);
+  --bg:#eceff2; --surface:#ffffff; --sunk:#f4f6f8;
+  --sea:#d9e3ea; --grid:#c6d3dd;
+  --land:#c8b183; --land-hi:#b89c66; --land-sel:#1f5f8b; --gone:#e4e8ec; --gone-line:#cdd5dc; --neutral:#d3d9de;
+  --ink:#1c2630; --ink-2:#5f6b77; --line:#d6dde3;
+  --accent:#1f5f8b; --accent-ink:#ffffff; --hit:#d9592b; --ok:#2f7a4b; --bad:#b4372b;
+  --display:"Space Grotesk",system-ui,sans-serif; --body:Inter,system-ui,sans-serif;
+  --radius:12px; --shadow:0 1px 2px rgba(20,35,50,.06),0 4px 16px rgba(20,35,50,.07);
 }
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --paper:#1b2230; --paper-2:#222b3b; --sea:#1f2939; --grid:#2f3b50;
-    --ink:#ece6d6; --ink-2:#a3a9b5; --line:#36435a;
-    --land:#8fb586; --land-hi:#a9cc9f; --land-sel:#f0955a; --gone:#2c3546;
-    --accent:#f0955a; --ok:#6fbf82; --bad:#ef7b6d; --card:#232c3c;
-    --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 24px rgba(0,0,0,.35);
-  }
-}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12181f; --surface:#1a222c; --sunk:#151c24;
+  --sea:#1b2631; --grid:#25323f;
+  --land:#a89470; --land-hi:#c2ad86; --land-sel:#6fb0e0; --gone:#1f2934; --gone-line:#2a3643; --neutral:#26313c;
+  --ink:#e6ebf0; --ink-2:#97a3af; --line:#2b3642;
+  --accent:#6fb0e0; --accent-ink:#0f1820; --hit:#f08a5d; --ok:#6cc08a; --bad:#ef7a6c;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.3); color-scheme:dark;
+}}
 :root[data-theme="dark"]{
-  --paper:#1b2230; --paper-2:#222b3b; --sea:#1f2939; --grid:#2f3b50;
-  --ink:#ece6d6; --ink-2:#a3a9b5; --line:#36435a;
-  --land:#8fb586; --land-hi:#a9cc9f; --land-sel:#f0955a; --gone:#2c3546;
-  --accent:#f0955a; --ok:#6fbf82; --bad:#ef7b6d; --card:#232c3c;
-  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 24px rgba(0,0,0,.35);
+  --bg:#12181f; --surface:#1a222c; --sunk:#151c24;
+  --sea:#1b2631; --grid:#25323f;
+  --land:#a89470; --land-hi:#c2ad86; --land-sel:#6fb0e0; --gone:#1f2934; --gone-line:#2a3643; --neutral:#26313c;
+  --ink:#e6ebf0; --ink-2:#97a3af; --line:#2b3642;
+  --accent:#6fb0e0; --accent-ink:#0f1820; --hit:#f08a5d; --ok:#6cc08a; --bad:#ef7a6c;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.3); color-scheme:dark;
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.45 Inter,system-ui,sans-serif}
-button{font:inherit;color:inherit}
-.wrap{max-width:1240px;margin:0 auto;padding:14px 16px 40px}
-header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px}
-h1{font-family:Fraunces,Georgia,serif;font-weight:700;font-size:30px;margin:0;letter-spacing:-.5px}
-h1 span{color:var(--accent)}
-.sub{color:var(--ink-2);font-size:13px}
-.spacer{flex:1}
-.iconbtn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:6px 11px;cursor:pointer;font-size:13px}
-.iconbtn:hover{border-color:var(--ink-2)}
-.meter{display:flex;gap:4px;align-items:center}
-.meter i{width:14px;height:22px;border-radius:2px;background:var(--card);border:1px solid var(--line);position:relative;overflow:hidden}
-.meter i.used{background:var(--paper-2)}
-.meter i.used::after{content:"";position:absolute;left:50%;top:0;bottom:0;border-left:1.5px dashed var(--ink-2)}
-.meter i.bad::after{border-color:var(--bad)}
-.meter-label{font-size:12px;color:var(--ink-2);margin-left:6px;white-space:nowrap}
-main{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:16px;align-items:start}
-@media (max-width:900px){main{grid-template-columns:1fr}}
-.mapcard{position:relative;background:var(--sea);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;perspective:1400px;aspect-ratio:1000/620}
-.mapcard svg{position:absolute;inset:0;width:100%;height:100%;display:block}
-.country{fill:var(--land);stroke:var(--paper);stroke-width:.6;vector-effect:non-scaling-stroke;cursor:pointer;transition:fill .25s}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--body)}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1200px;margin:0 auto;padding-block:16px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+
+header{display:flex;align-items:center;gap:12px}
+.brand{display:flex;align-items:baseline;gap:10px;min-width:0}
+h1{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:-.02em;margin:0}
+.edition{font-size:13px;color:var(--ink-2);white-space:nowrap}
+.tools{margin-left:auto;display:flex;gap:6px}
+.tool{border:1px solid var(--line);background:var(--surface);border-radius:999px;height:34px;padding:0 13px;font-size:13px;font-weight:500;cursor:pointer}
+.tool:hover{border-color:var(--ink-2)}
+
+main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+@media (max-width:880px){main{grid-template-columns:1fr}}
+
+/* map */
+.plate{position:relative;background:var(--sea);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;perspective:1400px;aspect-ratio:1000/620;max-width:100%}
+.plate svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.country{fill:var(--land);stroke:var(--sea);stroke-width:.7;vector-effect:non-scaling-stroke;cursor:pointer;transition:fill .2s}
 .country:hover{fill:var(--land-hi)}
 .country.sel{fill:var(--land-sel)}
-.country.gone{fill:url(#hatch);cursor:default;opacity:.55}
-.country.target{fill:var(--accent)!important;opacity:1}
-.neutral{fill:var(--gone);stroke:none;opacity:.6}
+.country.gone{fill:url(#hatch);stroke:var(--gone-line);cursor:default}
+.country.target{fill:var(--hit)!important}
+.neutral{fill:var(--neutral)}
 .gridline{stroke:var(--grid);stroke-width:1;vector-effect:non-scaling-stroke;fill:none}
-.creaseline{stroke:var(--ink-2);stroke-width:1.4;stroke-dasharray:5 4;vector-effect:non-scaling-stroke;opacity:.7}
+.creaseline{stroke:var(--ink-2);stroke-width:1.2;stroke-dasharray:6 5;vector-effect:non-scaling-stroke;opacity:.55}
 .country.flip{animation:flip .7s ease-in-out both;transform-box:fill-box;transform-origin:center}
 @keyframes flip{0%{transform:scaleY(1)}48%{transform:scaleY(0);fill:var(--land)}52%{transform:scaleY(0);fill:var(--gone)}100%{transform:scaleY(1);fill:var(--gone)}}
 .flap{position:absolute;inset:0;pointer-events:none;will-change:transform}
 .flap svg{position:absolute;inset:0;width:100%;height:100%}
-.flap.back{background:linear-gradient(var(--paper-2),var(--paper));box-shadow:inset 0 0 40px rgba(0,0,0,.08)}
-.flap.back::after{content:"";position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,transparent 0 39px,var(--grid) 39px 40px),repeating-linear-gradient(90deg,transparent 0 39px,var(--grid) 39px 40px);opacity:.5}
-.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--paper);font-size:12px;padding:3px 8px;border-radius:6px;white-space:nowrap;transform:translate(-50%,-130%);opacity:0;transition:opacity .1s}
-.status{position:absolute;left:12px;bottom:10px;background:var(--card);border-radius:999px;padding:4px 12px;font-size:13px;box-shadow:var(--shadow)}
-.status b{font-variant-numeric:tabular-nums}
-.panel{background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:14px;display:flex;flex-direction:column;gap:12px}
-.panel h2{font-family:Fraunces,Georgia,serif;font-size:17px;margin:0}
+.flap.back{background:var(--sunk);box-shadow:inset 0 0 50px rgba(0,0,0,.08)}
+.flap.back::after{content:"";position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,transparent 0 39px,var(--grid) 39px 40px),repeating-linear-gradient(90deg,transparent 0 39px,var(--grid) 39px 40px);opacity:.6}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;font-weight:500;padding:3px 8px;border-radius:6px;white-space:nowrap;transform:translate(-50%,-140%);opacity:0;transition:opacity .1s}
+.count{position:absolute;left:12px;bottom:12px;background:var(--surface);border-radius:999px;padding:4px 12px;font-size:13px;box-shadow:var(--shadow)}
+.count b{font-variant-numeric:tabular-nums}
+
+/* sheet */
+.sheet{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);display:flex;flex-direction:column;min-width:0}
+.sheet section{padding:16px;display:flex;flex-direction:column;gap:10px}
+.sheet section+section{border-top:1px solid var(--line)}
+.label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-2);display:flex;justify-content:space-between;align-items:center}
+.progress{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
+.progress i{height:6px;border-radius:3px;background:var(--line)}
+.progress i.on{background:var(--accent)}
+.progress i.miss{background:var(--bad)}
+.progress i.win{background:var(--ok)}
 .guess{display:flex;gap:8px}
-.guess input{flex:1;min-width:0;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:10px;padding:9px 11px;font:inherit}
+.guess input{flex:1;min-width:0;height:42px;border:1px solid var(--line);background:var(--sunk);border-radius:10px;padding:0 12px}
 .guess input:focus{outline:2px solid var(--accent);outline-offset:-1px}
-.btn{border:0;background:var(--ink);color:var(--paper);border-radius:10px;padding:9px 14px;font-weight:600;cursor:pointer}
+.btn{height:42px;border:0;background:var(--accent);color:var(--accent-ink);border-radius:10px;padding:0 16px;font-weight:600;cursor:pointer}
 .btn:disabled{opacity:.4;cursor:default}
-.btn.alt{background:var(--accent);color:#fff}
-.msg{min-height:20px;font-size:13px;color:var(--ink-2)}
+.btn.ghost{background:transparent;color:var(--ink-2);border:1px solid var(--line);height:36px;font-weight:500;font-size:13px}
+.btn.ghost:hover:not(:disabled){color:var(--ink);border-color:var(--ink-2)}
+.actions{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.msg{font-size:13px;color:var(--ink-2);min-height:20px}
 .msg.bad{color:var(--bad)} .msg.ok{color:var(--ok)}
-.qgroups{display:flex;flex-direction:column;gap:10px;max-height:46vh;overflow:auto;padding-right:2px}
-@media (max-width:900px){.qgroups{max-height:none}}
-.qgroup small{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-2);margin-bottom:5px}
-.qs{display:flex;flex-wrap:wrap;gap:6px}
-.q{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:6px 11px;font-size:13px;cursor:pointer;text-align:left}
-.q:hover{border-color:var(--accent);color:var(--accent)}
-.q.fold{border-style:dashed}
-.q:disabled{opacity:.4;cursor:default}
-.log{display:flex;flex-direction:column;gap:4px;font-size:13px;max-height:180px;overflow:auto}
-.log div{display:flex;gap:8px;align-items:baseline;border-bottom:1px dashed var(--line);padding:3px 0}
-.log .a{font-weight:600;min-width:28px}
-.log .a.y{color:var(--ok)} .log .a.n{color:var(--bad)}
-.log .c{margin-left:auto;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
-.empty{color:var(--ink-2);font-size:13px}
-.modal{position:fixed;inset:0;background:rgba(20,20,30,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:10}
+
+.clues{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.clue{display:grid;grid-template-columns:24px 1fr auto;gap:8px;align-items:baseline}
+.clue .n{font-family:var(--display);font-weight:700;color:var(--ink-2);font-size:13px;font-variant-numeric:tabular-nums}
+.clue .t{min-width:0}
+.clue .d{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.clue.latest .t{font-weight:600}
+.clue.latest .n{color:var(--accent)}
+.clue .miss{grid-column:2/4;font-size:12px;color:var(--bad)}
+.clue.new{animation:rise .4s ease-out}
+@keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.waiting{color:var(--ink-2);font-size:14px}
+
+/* modals */
+.modal{position:fixed;inset:0;background:rgba(10,18,26,.5);display:none;align-items:center;justify-content:center;z-index:10;padding-block:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .modal.show{display:flex}
-.sheet{background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:22px;max-width:420px;width:100%;max-height:90vh;overflow:auto}
-.sheet h3{font-family:Fraunces,Georgia,serif;font-size:24px;margin:0 0 6px}
-.sheet p{margin:6px 0}
-.big{font-family:Fraunces,Georgia,serif;font-size:28px;color:var(--accent);margin:8px 0}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;margin:14px 0}
-.stats b{display:block;font-size:22px;font-family:Fraunces,Georgia,serif}
+.card{background:var(--surface);border-radius:16px;box-shadow:var(--shadow);padding:24px;max-width:400px;width:100%;max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.card h2{font-family:var(--display);font-size:22px;margin:0;text-wrap:balance}
+.card p{margin:0}
+.card ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.answer{font-family:var(--display);font-weight:700;font-size:30px;color:var(--hit);line-height:1.1}
+.facts{font-size:13px;color:var(--ink-2)}
+.squares{font-size:20px;letter-spacing:3px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;padding:12px 0;border-block:1px solid var(--line)}
+.stats b{display:block;font-family:var(--display);font-size:22px}
 .stats span{font-size:11px;color:var(--ink-2)}
-.share{font-size:20px;letter-spacing:2px;margin:10px 0}
-.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.how ol{padding-left:20px;margin:8px 0}
-.how li{margin:4px 0}
-.pill{display:inline-block;background:var(--paper-2);border-radius:999px;padding:1px 9px;font-size:12px;color:var(--ink-2)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.muted{color:var(--ink-2);font-size:13px}
+@media (prefers-reduced-motion: reduce){.clue.new{animation:none}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <div>
-      <h1>Cr<span>e</span>ase</h1>
-      <div class="sub" id="sub">One hidden country. Ten folds.</div>
+    <div class="brand"><h1>Crease</h1><span class="edition" id="edition"></span></div>
+    <div class="tools">
+      <button class="tool" id="howBtn" aria-label="How to play">?</button>
+      <button class="tool" id="statsBtn">Stats</button>
+      <button class="tool" id="practiceBtn">Practice</button>
     </div>
-    <div class="spacer"></div>
-    <div class="meter" id="meter" aria-label="Creases used"></div>
-    <button class="iconbtn" id="howBtn">How to play</button>
-    <button class="iconbtn" id="statsBtn">Stats</button>
-    <button class="iconbtn" id="practiceBtn">Practice</button>
   </header>
   <main>
-    <div class="mapcard" id="mapcard">
+    <div class="plate" id="plate">
       <svg id="map" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid meet" aria-label="World map">
         <defs>
           <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
             <rect width="6" height="6" fill="var(--gone)"/>
-            <line x1="0" y1="0" x2="0" y2="6" stroke="var(--line)" stroke-width="2"/>
+            <line x1="0" y1="0" x2="0" y2="6" stroke="var(--gone-line)" stroke-width="1"/>
           </pattern>
         </defs>
-        <rect id="sea" x="-2000" y="-2000" width="5000" height="5000" fill="var(--sea)"/>
+        <rect x="-2000" y="-2000" width="5000" height="5000" fill="var(--sea)"/>
         <g id="grid"></g>
         <path id="neutral" class="neutral"></path>
         <g id="countries"></g>
         <g id="creases"></g>
       </svg>
       <div class="tip" id="tip"></div>
-      <div class="status" id="status"></div>
+      <div class="count" id="count"></div>
     </div>
-    <aside class="panel">
-      <div>
-        <h2>Make a guess</h2>
-        <div class="guess" style="margin-top:8px">
-          <input id="guessIn" list="names" placeholder="Type a country or tap the map" autocomplete="off">
+    <div class="sheet">
+      <section>
+        <div class="label"><span id="clueLabel">Clue 1 of 8</span><span id="leftLabel"></span></div>
+        <div class="progress" id="progress"></div>
+        <div class="guess">
+          <input id="guessIn" list="names" placeholder="Name the country" autocomplete="off" aria-label="Your guess">
           <datalist id="names"></datalist>
-          <button class="btn alt" id="guessBtn">Guess</button>
+          <button class="btn" id="guessBtn">Guess</button>
         </div>
-        <div class="msg" id="msg"></div>
-      </div>
-      <div>
-        <h2>Ask a question <span class="pill">costs 1 crease</span></h2>
-        <div class="qgroups" id="qgroups" style="margin-top:8px"></div>
-      </div>
-      <div>
-        <h2>Folds so far</h2>
-        <div class="log" id="log" style="margin-top:6px"></div>
-      </div>
-    </aside>
+        <div class="actions">
+          <div class="msg" id="msg"></div>
+          <button class="btn ghost" id="skipBtn">Next clue</button>
+        </div>
+      </section>
+      <section>
+        <div class="label">Clues</div>
+        <ol class="clues" id="clues"></ol>
+      </section>
+    </div>
   </main>
 </div>
 
-<div class="modal" id="endModal"><div class="sheet" id="endSheet"></div></div>
-<div class="modal" id="howModal"><div class="sheet how">
-  <h3>How to play</h3>
-  <p>A country is hidden on the map. Narrow it down by folding the map until you can name it.</p>
+<div class="modal" id="endModal"><div class="card" id="endCard"></div></div>
+<div class="modal" id="howModal"><div class="card">
+  <h2>How to play</h2>
+  <p>A country is hidden somewhere on the map. Each clue folds away the countries it rules out.</p>
   <ol>
-    <li><b>Ask yes/no questions.</b> Each answer folds every ruled-out country away. Questions with a dashed border fold the paper along a line of latitude or longitude.</li>
-    <li><b>Guess</b> by typing a name or tapping a country. A wrong guess folds that country away.</li>
-    <li>You have <b>10 creases</b>. Each question and each wrong guess uses one. A correct guess is free.</li>
+    <li>Read the clue and type a guess, or tap a country on the map.</li>
+    <li>A wrong guess, or <b>Next clue</b>, reveals another clue.</li>
+    <li>You get up to 8 clues. The fewer you need, the better.</li>
   </ol>
-  <p>Answers use each country's geographic center. There's a new puzzle every day at midnight UTC. Practice rounds don't affect your stats.</p>
-  <div class="row"><button class="btn" data-close>Start folding</button></div>
+  <p class="muted">Positions are measured from each country's center. A new country is hidden every day at midnight UTC. Practice rounds don't count toward your stats.</p>
+  <div class="row"><button class="btn" data-close>Start</button></div>
 </div></div>
 
 <script src="data.js"></script>
@@ -179,7 +190,7 @@ main{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:16px;align-items
 (() => {
 const $ = s => document.querySelector(s);
 const NS = 'http://www.w3.org/2000/svg';
-const MAX = 10;
+const MAX = 8;
 const C = DATA.countries;
 const byId = Object.fromEntries(C.map(c => [c.id, c]));
 const byName = Object.fromEntries(C.map(c => [c.n.toLowerCase(), c]));
@@ -187,17 +198,17 @@ const EPOCH = Date.UTC(2026, 10, 15);
 const RAD = Math.PI / 180;
 const projX = lng => DATA.tx + DATA.k * (((lng - DATA.lon0 + 540) % 360) - 180) * RAD;
 const projY = lat => DATA.ty - DATA.k * Math.log(Math.tan(Math.PI / 4 + lat * RAD / 2));
+const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const wait = ms => new Promise(r => setTimeout(r, ms));
 
-// ---------- storage (best effort) ----------
 const store = {
   get(k, d) { try { const v = localStorage.getItem('crease:' + k); return v ? JSON.parse(v) : d; } catch { return d; } },
   set(k, v) { try { localStorage.setItem('crease:' + k, JSON.stringify(v)); } catch {} }
 };
 
-// ---------- deterministic daily pick ----------
-function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
-const order = C.map(c => c.id).sort();
-{ const r = rng(20261115); for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; } }
+// ---------- daily pick ----------
+function hash(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967296; }
+const order = C.map(c => c.id).sort((a, b) => hash('crease' + a) - hash('crease' + b));
 const dayIndex = Math.max(0, Math.floor((Date.now() - EPOCH) / 864e5));
 const dailyTarget = order[dayIndex % order.length];
 
@@ -218,35 +229,35 @@ function line(g, cls, x1, y1, x2, y2) {
   g.appendChild(l); return l;
 }
 
-// ---------- questions ----------
+// ---------- clues ----------
 const REGIONS = ['Africa', 'Americas', 'Asia', 'Europe', 'Oceania'];
 const LANGS = { en: 'English', fr: 'French', es: 'Spanish', ar: 'Arabic', pt: 'Portuguese' };
 const fmtLat = t => t >= 0 ? `${t}°N` : `${-t}°S`;
 const fmtLng = t => t >= 0 ? `${t}°E` : `${-t}°W`;
 const sig2 = v => { if (v <= 0) return 0; const p = Math.pow(10, Math.floor(Math.log10(v)) - 1); return Math.round(v / p) * p; };
 const letter = c => c.n.normalize('NFD')[0].toUpperCase();
+const km = n => n.toLocaleString('en-US') + ' km²';
 
-function makeQ(key) {
+// Each fact: pred(country) and the sentence for a true / false answer.
+function fact(key) {
   const [type, arg] = key.split(':');
   const num = Number(arg);
   switch (type) {
-    case 'lat': return { key, group: 'fold', text: `Is its center north of ${fmtLat(num)}?`, short: `North of ${fmtLat(num)}`, pred: c => c.lat > num, fold: { axis: 'y', at: projY(num), keepLow: true } };
-    case 'lng': return { key, group: 'fold', text: `Is its center east of ${fmtLng(num)}?`, short: `East of ${fmtLng(num)}`, pred: c => c.lng > num, fold: { axis: 'x', at: projX(num), keepLow: false } };
-    case 'area': return { key, group: 'measure', text: `Is it larger than ${num.toLocaleString()} km²?`, short: `> ${num.toLocaleString()} km²`, pred: c => c.a > num };
-    case 'bord': return { key, group: 'measure', text: `Does it border more than ${num} ${num === 1 ? 'country' : 'countries'}?`, short: `> ${num} neighbours`, pred: c => c.b > num };
-    case 'alpha': return { key, group: 'measure', text: `Does its name start with a letter before ${arg}?`, short: `Name before ${arg}`, pred: c => letter(c) < arg };
-    case 'reg': return { key, group: 'region', text: `Is it in ${arg === 'Americas' ? 'the Americas' : arg}?`, short: arg, pred: c => c.r === arg };
-    case 'sub': return { key, group: 'region', text: `Is it in ${arg}?`, short: arg, pred: c => c.s === arg };
-    case 'll': return { key, group: 'trait', text: 'Is it landlocked?', short: 'Landlocked', pred: c => !!c.ll };
-    case 'isl': return { key, group: 'trait', text: 'Does it have no land borders?', short: 'No land borders', pred: c => c.b === 0 };
-    case 'trop': return { key, group: 'trait', text: 'Is its center in the tropics?', short: 'In the tropics', pred: c => Math.abs(c.lat) < 23.44 };
-    case 'lh': return { key, group: 'trait', text: 'Do people drive on the left?', short: 'Drives on the left', pred: c => !!c.lh };
-    case 'eur': return { key, group: 'trait', text: 'Does it use the euro?', short: 'Uses the euro', pred: c => !!c.eur };
-    case 'lang': return { key, group: 'trait', text: `Is ${LANGS[arg]} an official language?`, short: `${LANGS[arg]} spoken`, pred: c => !!c[arg] };
+    case 'lat': return { group: 'fold', pred: c => c.lat > num, yes: `It lies north of ${fmtLat(num)}.`, no: `It lies south of ${fmtLat(num)}.`, fold: { axis: 'y', at: projY(num) } };
+    case 'lng': return { group: 'fold', pred: c => c.lng > num, yes: `It lies east of ${fmtLng(num)}.`, no: `It lies west of ${fmtLng(num)}.`, fold: { axis: 'x', at: projX(num) } };
+    case 'area': return { group: 'size', pred: c => c.a > num, yes: `It's larger than ${km(num)}.`, no: `It's smaller than ${km(num)}.` };
+    case 'bord': return { group: 'size', pred: c => c.b > num, yes: `It borders more than ${num} ${num === 1 ? 'country' : 'countries'}.`, no: num === 0 ? 'It has no land borders.' : `It borders ${num} or fewer countries.` };
+    case 'alpha': return { group: 'name', pred: c => letter(c) < arg, yes: `Its name starts with a letter before ${arg}.`, no: `Its name starts with ${arg} or a later letter.` };
+    case 'reg': { const r = arg === 'Americas' ? 'the Americas' : arg; return { group: 'region', pred: c => c.r === arg, yes: `It's in ${r}.`, no: `It's not in ${r}.` }; }
+    case 'sub': return { group: 'region', pred: c => c.s === arg, yes: `It's in ${arg}.`, no: `It's not in ${arg}.` };
+    case 'll': return { group: 'trait', pred: c => !!c.ll, yes: "It's landlocked.", no: 'It has a coastline.' };
+    case 'trop': return { group: 'trait', pred: c => Math.abs(c.lat) < 23.44, yes: 'Its center is in the tropics.', no: 'Its center is outside the tropics.' };
+    case 'lh': return { group: 'trait', pred: c => !!c.lh, yes: 'Traffic drives on the left.', no: 'Traffic drives on the right.' };
+    case 'eur': return { group: 'trait', pred: c => !!c.eur, yes: 'It uses the euro.', no: "It doesn't use the euro." };
+    case 'lang': return { group: 'trait', pred: c => !!c[arg], yes: `${LANGS[arg]} is an official language.`, no: `${LANGS[arg]} is not an official language.` };
   }
 }
 
-// pick the most balanced threshold among candidates; pred is v > t
 function balanced(values, cands, gt = (v, t) => v > t) {
   const n = values.length; let best = null, bd = Infinity;
   for (const t of cands) {
@@ -258,159 +269,151 @@ function balanced(values, cands, gt = (v, t) => v > t) {
   return best;
 }
 
-function availableQuestions() {
+// The game chooses the next clue: the fact that splits the remaining
+// countries most evenly, nudged toward variety and a little daily randomness.
+function nextClueKey() {
   const alive = C.filter(c => S.alive.has(c.id));
+  if (alive.length < 2) return null;
   const keys = [];
-  const lat = balanced(alive.map(c => c.lat), [...new Set(alive.map(c => Math.round(c.lat)))]);
-  if (lat !== null) keys.push('lat:' + lat);
-  const lng = balanced(alive.map(c => c.lng), [...new Set(alive.map(c => Math.round(c.lng)))]);
-  if (lng !== null) keys.push('lng:' + lng);
-  const ar = balanced(alive.map(c => c.a), [...new Set(alive.map(c => sig2(c.a)))]);
-  if (ar !== null) keys.push('area:' + ar);
-  const bd = balanced(alive.map(c => c.b), [...new Set(alive.map(c => c.b))]);
-  if (bd !== null) keys.push('bord:' + bd);
-  const L = 'BCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-  const al = balanced(alive.map(letter), L, (v, t) => v < t);
-  if (al !== null) keys.push('alpha:' + al);
-  const regs = new Set(alive.map(c => c.r));
-  if (regs.size > 1) REGIONS.forEach(r => keys.push('reg:' + r));
-  else [...new Set(alive.map(c => c.s))].sort().forEach(s => keys.push('sub:' + s));
-  keys.push('ll', 'isl', 'trop', 'lh', 'eur', ...Object.keys(LANGS).map(k => 'lang:' + k));
-  return keys.filter(k => !S.asked.has(k)).map(makeQ).filter(q => {
-    const y = alive.filter(q.pred).length;
-    return y > 0 && y < alive.length;
-  });
+  const add = (prefix, t) => { if (t !== null) keys.push(prefix + ':' + t); };
+  add('lat', balanced(alive.map(c => c.lat), [...new Set(alive.map(c => Math.round(c.lat)))]));
+  add('lng', balanced(alive.map(c => c.lng), [...new Set(alive.map(c => Math.round(c.lng)))]));
+  add('area', balanced(alive.map(c => c.a), [...new Set(alive.map(c => sig2(c.a)))]));
+  add('bord', balanced(alive.map(c => c.b), [...new Set(alive.map(c => c.b))]));
+  add('alpha', balanced(alive.map(letter), 'BCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''), (v, t) => v < t));
+  if (new Set(alive.map(c => c.r)).size > 1) REGIONS.forEach(r => keys.push('reg:' + r));
+  else [...new Set(alive.map(c => c.s))].forEach(s => keys.push('sub:' + s));
+  keys.push('ll', 'trop', 'lh', 'eur', ...Object.keys(LANGS).map(k => 'lang:' + k));
+
+  const usedTypes = S.clues.map(k => k.split(':')[0]);
+  const lastGroup = S.clues.length ? fact(S.clues[S.clues.length - 1]).group : null;
+  const target = byId[S.target];
+  let best = null, bs = Infinity;
+  for (const key of keys) {
+    if (S.clues.includes(key)) continue;
+    const f = fact(key);
+    const keep = alive.filter(c => f.pred(c) === f.pred(target)).length;
+    if (keep === alive.length) continue; // rules nothing out
+    const yes = alive.filter(f.pred).length;
+    let s = Math.abs(yes - alive.length / 2) / alive.length;
+    if (f.group === lastGroup) s += 0.15;
+    if (usedTypes.includes(key.split(':')[0])) s += 0.08;
+    if (f.group === 'name') s += 0.12; // a fallback, not a favourite
+    s += hash(S.seed + '|' + S.clues.length + '|' + key) * 0.14;
+    if (s < bs) { bs = s; best = key; }
+  }
+  return best;
 }
 
 // ---------- state ----------
 let S;
-function newState(mode, target) {
-  return { mode, target, alive: new Set(C.map(c => c.id)), asked: new Set(), actions: [], used: 0, wrong: [], done: false, won: false, busy: false, sel: null };
-}
-
-function start(mode, target, replay = []) {
-  S = newState(mode, target);
-  for (const c of C) { els[c.id].setAttribute('class', 'country'); }
+function start(mode, target, seed, actions = []) {
+  S = { mode, target, seed, alive: new Set(C.map(c => c.id)), clues: [], cut: [], misses: {}, actions: [], done: false, won: false, busy: false, sel: null };
+  for (const c of C) els[c.id].setAttribute('class', 'country');
   $('#creases').innerHTML = '';
-  $('#log').innerHTML = '';
   setVB([0, 0, DATA.W, DATA.H], false);
-  for (const a of replay) apply(a, false);
-  if (!S.done && S.used >= MAX) { S.done = true; S.won = false; }
-  $('#sub').textContent = mode === 'daily' ? `Daily #${dayIndex + 1} · one hidden country, ten folds` : 'Practice round · random country';
+  $('#edition').textContent = mode === 'daily' ? `Daily #${dayIndex + 1}` : 'Practice';
   $('#guessIn').value = ''; msg('');
+  revealClue(false);
+  for (const a of actions) act(a, false);
   render();
-  if (S.done) { reveal(false); setTimeout(showEnd, 300); }
+  if (S.done) { reveal(false); showEnd(); }
+  else if (actions.length) zoomToAlive(false);
 }
 
-function persist() {
-  if (S.mode !== 'daily') return;
-  store.set('day', { day: dayIndex, actions: S.actions });
+function persist() { if (S.mode === 'daily') store.set('day', { day: dayIndex, actions: S.actions }); }
+
+// Reveal the next clue and fold away what it rules out.
+function revealClue(live) {
+  const key = nextClueKey();
+  if (!key) { S.clues.push(null); S.cut.push(0); return Promise.resolve(); }
+  const f = fact(key);
+  const ans = f.pred(byId[S.target]);
+  const out = C.filter(c => S.alive.has(c.id) && f.pred(c) !== ans).map(c => c.id);
+  out.forEach(id => S.alive.delete(id));
+  S.clues.push(key); S.cut.push(out.length);
+  if (f.fold) line($('#creases'), 'creaseline', f.fold.axis === 'y' ? -2000 : f.fold.at, f.fold.axis === 'y' ? f.fold.at : -2000, f.fold.axis === 'y' ? 3000 : f.fold.at, f.fold.axis === 'y' ? f.fold.at : 3000);
+  // keepLow: the top (north) or left (west) side stays
+  const fold = f.fold ? { ...f.fold, keepLow: f.fold.axis === 'y' ? ans : !ans } : null;
+  return foldAway(out, live, fold);
 }
 
-// apply an action (question or guess); animate if live
-function apply(a, live) {
+// action: {t:'g', id} guess, or {t:'s'} skip
+function act(a, live) {
   S.actions.push(a);
-  if (a.t === 'q') {
-    const q = makeQ(a.key);
-    const ans = q.pred(byId[S.target]);
-    const out = C.filter(c => S.alive.has(c.id) && q.pred(c) !== ans).map(c => c.id);
-    S.asked.add(a.key); S.used++;
-    out.forEach(id => S.alive.delete(id));
-    addLog(q.short + '?', ans ? 'Yes' : 'No', ans, `−${out.length}`);
-    if (q.fold) drawCrease(q.fold);
-    return foldAway(out, live, q.fold ? { ...q.fold, keepLow: q.fold.axis === 'y' ? ans : !ans } : null);
-  } else {
-    const c = byId[a.id];
-    if (a.id === S.target) {
-      S.done = true; S.won = true;
-      addLog(c.n, '✓', true, 'found');
-      return Promise.resolve();
-    }
-    S.used++; S.wrong.push(a.id); S.alive.delete(a.id);
-    addLog(c.n, '✗', false, 'wrong');
-    return foldAway([a.id], live, null);
+  const idx = S.clues.length - 1;
+  if (a.t === 'g' && a.id === S.target) { S.done = true; S.won = true; return Promise.resolve(); }
+  let p = Promise.resolve();
+  if (a.t === 'g') {
+    (S.misses[idx] ||= []).push(a.id);
+    S.alive.delete(a.id);
+    p = foldAway([a.id], live, null, false);
   }
-}
-
-function afterAction() {
-  if (!S.done && S.used >= MAX) { S.done = true; S.won = false; }
-  render(); persist();
-  if (S.done) { finish(); }
+  if (S.clues.length >= MAX) { S.done = true; S.won = false; return p; }
+  if (!live) return revealClue(false); // replay must stay synchronous
+  return p.then(() => revealClue(true));
 }
 
 // ---------- animation ----------
-function foldAway(ids, live, fold) {
-  if (!live) { ids.forEach(id => els[id].classList.add('gone')); return Promise.resolve(); }
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (reduce) { ids.forEach(id => els[id].classList.add('gone')); return zoomToAlive(); }
-  if (fold) return halfFold(ids, fold).then(zoomToAlive);
+function foldAway(ids, live, fold, zoom = true) {
+  const done = () => zoom ? zoomToAlive(live) : Promise.resolve();
+  if (!ids.length) return done();
+  if (!live || reduceMotion()) { ids.forEach(id => els[id].classList.add('gone')); return done(); }
+  if (fold) return halfFold(ids, fold).then(done);
   const xs = ids.map(id => byId[id].bb[0]);
-  const lo = Math.min(...xs), hi = Math.max(...xs) || 1;
-  ids.forEach(id => {
-    const el = els[id];
-    el.style.animationDelay = ((byId[id].bb[0] - lo) / (hi - lo || 1) * 450) + 'ms';
-    el.classList.add('flip');
-  });
-  return new Promise(r => setTimeout(() => {
+  const lo = Math.min(...xs), span = (Math.max(...xs) - lo) || 1;
+  ids.forEach(id => { els[id].style.animationDelay = ((byId[id].bb[0] - lo) / span * 400) + 'ms'; els[id].classList.add('flip'); });
+  return wait(1150).then(() => {
     ids.forEach(id => { const el = els[id]; el.classList.remove('flip'); el.style.animationDelay = ''; el.classList.add('gone'); });
-    r();
-  }, 1200)).then(zoomToAlive);
+  }).then(done);
 }
 
-// fold one half of the paper over the crease line
+// Fold one side of the paper over the crease line.
 function halfFold(ids, fold) {
-  const card = $('#mapcard');
-  const R = card.getBoundingClientRect();
-  const m = svg.getScreenCTM();
+  const plate = $('#plate');
+  const R = plate.getBoundingClientRect();
   const pt = svg.createSVGPoint();
   pt.x = fold.axis === 'x' ? fold.at : 0; pt.y = fold.axis === 'y' ? fold.at : 0;
-  const sp = pt.matrixTransform(m);
-  const W = R.width, H = R.height;
-  const P = fold.axis === 'y' ? Math.min(H, Math.max(0, sp.y - R.top)) : Math.min(W, Math.max(0, sp.x - R.left));
-  // the flap is the side being removed; keepLow means the top/left side stays
-  const flapHigh = fold.keepLow; // flap is bottom/right
-  const size = fold.axis === 'y' ? (flapHigh ? H - P : P) : (flapHigh ? W - P : P);
+  const sp = pt.matrixTransform(svg.getScreenCTM());
+  const W = R.width, H = R.height, vert = fold.axis === 'y';
+  const P = vert ? Math.min(H, Math.max(0, sp.y - R.top)) : Math.min(W, Math.max(0, sp.x - R.left));
+  const high = fold.keepLow; // flap is the bottom/right side
+  const size = vert ? (high ? H - P : P) : (high ? W - P : P);
 
   const front = document.createElement('div'); front.className = 'flap';
   const clone = svg.cloneNode(true); clone.removeAttribute('id');
   clone.querySelectorAll('.country').forEach(p => { if (!ids.includes(p.dataset.id)) p.remove(); else p.setAttribute('class', 'country'); });
   clone.querySelector('#creases')?.remove();
+  clone.querySelectorAll('[id]').forEach(e => { if (e.id !== 'hatch') e.removeAttribute('id'); });
   front.appendChild(clone);
   const back = document.createElement('div'); back.className = 'flap back';
 
-  let fClip, bClip, origin, fEnd, bStart;
-  if (fold.axis === 'y') {
-    origin = `50% ${P}px`;
-    if (flapHigh) { fClip = `inset(${P}px 0 0 0)`; bClip = `inset(${Math.max(0, P - size)}px 0 ${H - P}px 0)`; fEnd = 'rotateX(90deg)'; bStart = 'rotateX(-90deg)'; }
+  let fClip, bClip, fEnd, bStart;
+  if (vert) {
+    if (high) { fClip = `inset(${P}px 0 0 0)`; bClip = `inset(${Math.max(0, P - size)}px 0 ${H - P}px 0)`; fEnd = 'rotateX(90deg)'; bStart = 'rotateX(-90deg)'; }
     else { fClip = `inset(0 0 ${H - P}px 0)`; bClip = `inset(${P}px 0 ${Math.max(0, H - P - size)}px 0)`; fEnd = 'rotateX(-90deg)'; bStart = 'rotateX(90deg)'; }
   } else {
-    origin = `${P}px 50%`;
-    if (flapHigh) { fClip = `inset(0 0 0 ${P}px)`; bClip = `inset(0 ${W - P}px 0 ${Math.max(0, P - size)}px)`; fEnd = 'rotateY(-90deg)'; bStart = 'rotateY(90deg)'; }
+    if (high) { fClip = `inset(0 0 0 ${P}px)`; bClip = `inset(0 ${W - P}px 0 ${Math.max(0, P - size)}px)`; fEnd = 'rotateY(-90deg)'; bStart = 'rotateY(90deg)'; }
     else { fClip = `inset(0 ${W - P}px 0 0)`; bClip = `inset(0 ${Math.max(0, W - P - size)}px 0 ${P}px)`; fEnd = 'rotateY(90deg)'; bStart = 'rotateY(-90deg)'; }
   }
   front.style.clipPath = fClip; back.style.clipPath = bClip;
-  front.style.transformOrigin = back.style.transformOrigin = origin;
+  front.style.transformOrigin = back.style.transformOrigin = vert ? `50% ${P}px` : `${P}px 50%`;
   back.style.transform = bStart; back.style.visibility = 'hidden';
-  card.insertBefore(front, $('#tip')); card.insertBefore(back, $('#tip'));
+  plate.insertBefore(back, $('#tip')); plate.insertBefore(front, back);
   ids.forEach(id => els[id].classList.add('gone'));
 
-  const T = 480;
+  const T = 460;
   return front.animate([{ transform: 'rotate(0)', filter: 'brightness(1)' }, { transform: fEnd, filter: 'brightness(.75)' }], { duration: T, easing: 'cubic-bezier(.5,0,.9,.6)', fill: 'forwards' }).finished
     .then(() => { front.remove(); back.style.visibility = 'visible';
       return back.animate([{ transform: bStart, filter: 'brightness(.8)' }, { transform: 'rotate(0)', filter: 'brightness(1)' }], { duration: T, easing: 'cubic-bezier(.1,.4,.5,1)', fill: 'forwards' }).finished; })
-    .then(() => back.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 380, delay: 120, fill: 'forwards' }).finished)
+    .then(() => back.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 350, delay: 100, fill: 'forwards' }).finished)
     .then(() => back.remove());
-}
-
-function drawCrease(f) {
-  const l = f.axis === 'y' ? line($('#creases'), 'creaseline', -2000, f.at, 3000, f.at) : line($('#creases'), 'creaseline', f.at, -2000, f.at, 3000);
-  return l;
 }
 
 let vb = [0, 0, DATA.W, DATA.H];
 function setVB(v, animate = true) {
-  if (!animate) { vb = v; svg.setAttribute('viewBox', v.join(' ')); return Promise.resolve(); }
-  const from = vb.slice(), t0 = performance.now(), D = 750;
+  if (!animate || reduceMotion()) { vb = v; svg.setAttribute('viewBox', v.join(' ')); return Promise.resolve(); }
+  const from = vb.slice(), t0 = performance.now(), D = 700;
   return new Promise(res => {
     const step = now => {
       const k = Math.min(1, (now - t0) / D), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
@@ -421,162 +424,145 @@ function setVB(v, animate = true) {
     requestAnimationFrame(step);
   });
 }
-function zoomToAlive() {
-  const ids = [...S.alive];
-  if (!ids.length) return Promise.resolve();
-  let [x0, y0, x1, y1] = [1e9, 1e9, -1e9, -1e9];
-  ids.forEach(id => { const b = byId[id].bb; x0 = Math.min(x0, b[0]); y0 = Math.min(y0, b[1]); x1 = Math.max(x1, b[2]); y1 = Math.max(y1, b[3]); });
-  let w = Math.max(x1 - x0, 120), h = Math.max(y1 - y0, 120 * DATA.H / DATA.W);
-  w *= 1.18; h *= 1.18;
+function frame(x0, y0, x1, y1, pad, minW) {
+  let w = Math.max((x1 - x0) * pad, minW), h = Math.max((y1 - y0) * pad, minW * DATA.H / DATA.W);
   const ratio = DATA.W / DATA.H;
   if (w / h > ratio) h = w / ratio; else w = h * ratio;
-  if (w >= DATA.W) { w = DATA.W; h = DATA.H; }
-  let cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
-  let x = Math.min(Math.max(cx - w / 2, 0), DATA.W - w), y = Math.min(Math.max(cy - h / 2, 0), DATA.H - h);
-  return setVB([x, y, w, h]);
+  if (w >= DATA.W) return [0, 0, DATA.W, DATA.H];
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+  return [Math.min(Math.max(cx - w / 2, 0), DATA.W - w), Math.min(Math.max(cy - h / 2, 0), DATA.H - h), w, h];
+}
+function zoomToAlive(animate = true) {
+  const ids = [...S.alive]; if (!ids.length) return Promise.resolve();
+  let b = [1e9, 1e9, -1e9, -1e9];
+  ids.forEach(id => { const q = byId[id].bb; b = [Math.min(b[0], q[0]), Math.min(b[1], q[1]), Math.max(b[2], q[2]), Math.max(b[3], q[3])]; });
+  return setVB(frame(...b, 1.2, 140), animate);
+}
+function reveal(animate = true) {
+  els[S.target].classList.remove('gone', 'sel');
+  els[S.target].classList.add('target');
+  const b = byId[S.target].bb;
+  return setVB(frame(...b, 2.6, 170), animate);
 }
 
 // ---------- rendering ----------
 function render() {
-  const m = $('#meter'); m.innerHTML = '';
-  let wi = 0;
-  const kinds = S.actions.filter(a => !(a.t === 'g' && a.id === S.target)).map(a => a.t);
+  const n = S.alive.size;
+  $('#count').innerHTML = S.done ? (S.won ? 'Found it' : 'Out of clues') : `<b>${n}</b> ${n === 1 ? 'country' : 'countries'} left`;
+  const shown = S.clues.length;
+  $('#clueLabel').textContent = S.done ? (S.won ? `Solved with ${shown} ${shown === 1 ? 'clue' : 'clues'}` : 'No clues left') : `Clue ${shown} of ${MAX}`;
+  $('#leftLabel').textContent = '';
+
+  const prog = $('#progress'); prog.innerHTML = '';
   for (let i = 0; i < MAX; i++) {
     const el = document.createElement('i');
-    if (i < kinds.length) { el.className = 'used' + (kinds[i] === 'g' ? ' bad' : ''); }
-    m.appendChild(el);
+    if (i < shown) el.className = (S.done && i === shown - 1) ? (S.won ? 'win' : 'miss') : (S.misses[i] ? 'miss' : 'on');
+    prog.appendChild(el);
   }
-  const lab = document.createElement('span'); lab.className = 'meter-label'; lab.textContent = `${MAX - S.used} left`; m.appendChild(lab);
-  $('#status').innerHTML = S.done ? (S.won ? 'Found it!' : 'Out of creases') : `<b>${S.alive.size}</b> ${S.alive.size === 1 ? 'country' : 'countries'} left`;
 
-  const qg = $('#qgroups'); qg.innerHTML = '';
-  if (!S.done) {
-    const qs = availableQuestions();
-    const groups = { fold: 'Fold the map', region: 'Where is it?', measure: 'Measure', trait: 'Traits' };
-    for (const [g, title] of Object.entries(groups)) {
-      const list = qs.filter(q => q.group === g); if (!list.length) continue;
-      const box = document.createElement('div'); box.className = 'qgroup';
-      box.innerHTML = `<small>${title}</small>`;
-      const row = document.createElement('div'); row.className = 'qs';
-      for (const q of list) {
-        const b = document.createElement('button'); b.className = 'q' + (q.fold ? ' fold' : ''); b.textContent = q.text;
-        b.disabled = S.busy;
-        b.onclick = () => ask(q.key);
-        row.appendChild(b);
-      }
-      box.appendChild(row); qg.appendChild(box);
-    }
-    if (!qs.length) qg.innerHTML = '<div class="empty">No question can split what’s left. Time to guess.</div>';
-    if (S.alive.size === 1) qg.innerHTML = '<div class="empty">Only one country left. Make your guess, it’s free.</div>';
-  } else qg.innerHTML = '<div class="empty">Round over.</div>';
+  const list = $('#clues'); const prevCount = list.children.length; list.innerHTML = '';
+  S.clues.forEach((key, i) => {
+    const li = document.createElement('li');
+    li.className = 'clue' + (i === shown - 1 && !S.done ? ' latest' : '') + (i >= prevCount && prevCount ? ' new' : '');
+    const text = key ? (f => f.pred(byId[S.target]) ? f.yes : f.no)(fact(key)) : 'No clue can narrow it further. Take your best guess.';
+    li.innerHTML = `<span class="n">${i + 1}</span><span class="t"></span><span class="d">${S.cut[i] ? '−' + S.cut[i] : ''}</span>`;
+    li.querySelector('.t').textContent = text;
+    if (S.misses[i]) { const m = document.createElement('span'); m.className = 'miss'; m.textContent = 'Not ' + S.misses[i].map(id => byId[id].n).join(', not '); li.appendChild(m); }
+    list.appendChild(li);
+  });
 
   const dl = $('#names'); dl.innerHTML = '';
   C.filter(c => S.alive.has(c.id)).forEach(c => { const o = document.createElement('option'); o.value = c.n; dl.appendChild(o); });
-  $('#guessBtn').disabled = S.done || S.busy;
+  $('#guessBtn').disabled = $('#skipBtn').disabled = S.done || S.busy;
   $('#guessIn').disabled = S.done;
-  if (!$('#log').children.length) $('#log').innerHTML = '<div class="empty" style="border:0">Nothing folded yet.</div>';
-}
-
-function addLog(q, a, yes, count) {
-  const log = $('#log');
-  if (log.querySelector('.empty')) log.innerHTML = '';
-  const d = document.createElement('div');
-  d.innerHTML = `<span class="a ${yes ? 'y' : 'n'}">${a}</span><span></span><span class="c">${count}</span>`;
-  d.children[1].textContent = q;
-  log.prepend(d);
+  $('#skipBtn').textContent = shown >= MAX ? 'Give up' : 'Next clue';
+  if (!S.done && !S.busy && n === 1 && !$('#msg').textContent) msg('Only one country left. You know this one.');
 }
 
 function msg(t, cls = '') { const m = $('#msg'); m.textContent = t; m.className = 'msg ' + cls; }
 
-// ---------- actions ----------
-function ask(key) {
-  if (S.busy || S.done) return;
-  S.busy = true; render(); msg('');
-  apply({ t: 'q', key }, true).then(() => { S.busy = false; afterAction(); });
+// ---------- player actions ----------
+function play(a) {
+  S.busy = true; render();
+  act(a, true).then(() => {
+    S.busy = false;
+    if (S.done) finish(); else { render(); persist(); }
+  });
 }
 
 function guess(name) {
   if (S.busy || S.done) return;
   const c = byName[(name || '').trim().toLowerCase()];
-  if (!c) { msg('Pick a country from the list.', 'bad'); return; }
-  if (!S.alive.has(c.id)) { msg(`${c.n} is already folded away.`, 'bad'); return; }
+  if (!c) { msg('Choose a country from the list.', 'bad'); return; }
+  if (!S.alive.has(c.id)) { msg(`${c.n} has already been ruled out.`, 'bad'); return; }
   select(null); $('#guessIn').value = '';
-  S.busy = true; render();
-  apply({ t: 'g', id: c.id }, true).then(() => {
-    S.busy = false;
-    if (!S.won) msg(`Not ${c.n}.`, 'bad');
-    afterAction();
-  });
+  msg(c.id === S.target ? '' : `Not ${c.n}.`, c.id === S.target ? '' : 'bad');
+  play({ t: 'g', id: c.id });
 }
+function skip() { if (S.busy || S.done) return; msg(''); play({ t: 's' }); }
 
 function select(id) {
   if (S.sel) els[S.sel].classList.remove('sel');
   S.sel = id;
-  if (id) { els[id].classList.add('sel'); $('#guessIn').value = byId[id].n; msg(`Selected ${byId[id].n}. Press Guess to confirm.`); }
-}
-
-function reveal(animate = true) {
-  els[S.target].classList.remove('gone');
-  els[S.target].classList.add('target');
-  const b = byId[S.target].bb;
-  const w = Math.max((b[2] - b[0]) * 2.4, 160), h = w * DATA.H / DATA.W;
-  const cx = (b[0] + b[2]) / 2, cy = (b[1] + b[3]) / 2;
-  const v = [Math.min(Math.max(cx - w / 2, 0), DATA.W - w), Math.min(Math.max(cy - h / 2, 0), DATA.H - h), w, h];
-  return setVB(v, animate);
+  if (id) { els[id].classList.add('sel'); $('#guessIn').value = byId[id].n; msg(''); }
 }
 
 function finish() {
+  render(); persist();
   if (S.mode === 'daily') {
-    const st = store.get('stats', { played: 0, wins: 0, streak: 0, best: 0, last: -1, dist: {} });
+    const st = store.get('stats', { played: 0, wins: 0, streak: 0, best: 0, last: -1 });
     if (st.last !== dayIndex) {
       st.played++; st.last = dayIndex;
-      if (S.won) { st.wins++; st.streak = (st.lastWin === dayIndex - 1 ? st.streak : 0) + 1; st.lastWin = dayIndex; st.dist[S.used] = (st.dist[S.used] || 0) + 1; }
+      if (S.won) { st.wins++; st.streak = (st.lastWin === dayIndex - 1 ? st.streak : 0) + 1; st.lastWin = dayIndex; }
       else st.streak = 0;
       st.best = Math.max(st.best, st.streak);
       store.set('stats', st);
     }
   }
-  reveal(true).then(() => setTimeout(showEnd, 350));
+  reveal(true).then(() => wait(400)).then(showEnd);
 }
 
 function shareText() {
-  const marks = S.actions.map(a => a.t === 'q' ? (makeQ(a.key).fold ? '📏' : '⬜') : (a.id === S.target ? '🟩' : '🟥')).join('');
-  const head = S.mode === 'daily' ? `Crease #${dayIndex + 1}` : 'Crease (practice)';
-  return `${head} ${S.won ? S.used : 'X'}/${MAX}\n${marks}`;
+  const sq = S.clues.map((_, i) => (S.done && i === S.clues.length - 1) ? (S.won ? '🟩' : '🟥') : (S.misses[i] ? '🟥' : '⬜')).join('');
+  const head = S.mode === 'daily' ? `Crease #${dayIndex + 1}` : 'Crease practice';
+  return `${head}  ${S.won ? S.clues.length : 'X'}/${MAX}\n${sq}`;
 }
 
 function statsHTML() {
-  const st = store.get('stats', { played: 0, wins: 0, streak: 0, best: 0, dist: {} });
+  const st = store.get('stats', { played: 0, wins: 0, streak: 0, best: 0 });
   const pct = st.played ? Math.round(st.wins / st.played * 100) : 0;
-  return `<div class="stats"><div><b>${st.played}</b><span>Played</span></div><div><b>${pct}%</b><span>Won</span></div><div><b>${st.streak}</b><span>Streak</span></div><div><b>${st.best}</b><span>Best</span></div></div>`;
+  return `<div class="stats"><div><b>${st.played}</b><span>Played</span></div><div><b>${pct}%</b><span>Solved</span></div><div><b>${st.streak}</b><span>Streak</span></div><div><b>${st.best}</b><span>Best streak</span></div></div>`;
 }
 
 function showEnd() {
-  const c = byId[S.target];
-  const sh = $('#endSheet');
-  sh.innerHTML = `<h3>${S.won ? (S.used <= 4 ? 'Sharp folding!' : 'Found it!') : 'Out of creases'}</h3>
-    <p>${S.won ? `You found it using ${S.used} of ${MAX} creases.` : 'The hidden country was'}</p>
-    <div class="big">${c.n}</div>
-    <p class="sub">${c.s} · capital ${c.cap || '—'} · ${c.a.toLocaleString()} km²</p>
-    <div class="share">${shareText().split('\n')[1]}</div>
-    ${S.mode === 'daily' ? statsHTML() + '<p class="sub">Next puzzle at midnight UTC.</p>' : ''}
-    <div class="row"><button class="btn alt" id="shareBtn">Copy result</button><button class="btn" id="againBtn">Practice round</button><button class="iconbtn" data-close>Close</button></div>`;
-  $('#shareBtn').onclick = () => { navigator.clipboard?.writeText(shareText()).then(() => $('#shareBtn').textContent = 'Copied!', () => {}); };
+  const c = byId[S.target], k = S.clues.length;
+  $('#endCard').innerHTML = `<h2>${S.won ? (k <= 3 ? 'Sharp eyes.' : 'Found it.') : 'Out of clues.'}</h2>
+    <p class="muted">${S.won ? `You named it after ${k} ${k === 1 ? 'clue' : 'clues'}.` : 'The hidden country was'}</p>
+    <div class="answer">${c.n}</div>
+    <div class="facts">${c.s} · Capital: ${c.cap || 'none'} · ${km(c.a)}</div>
+    <div class="squares">${shareText().split('\n')[1]}</div>
+    ${S.mode === 'daily' ? statsHTML() + '<p class="muted">A new country is hidden at midnight UTC.</p>' : ''}
+    <div class="row"><button class="btn" id="shareBtn">Copy result</button><button class="btn ghost" id="againBtn">Play practice</button><button class="btn ghost" data-close>Close</button></div>`;
+  $('#shareBtn').onclick = () => {
+    const b = $('#shareBtn');
+    Promise.resolve().then(() => navigator.clipboard.writeText(shareText())).then(() => b.textContent = 'Copied', () => b.textContent = 'Copy failed');
+  };
   $('#againBtn').onclick = () => { $('#endModal').classList.remove('show'); practice(); };
   $('#endModal').classList.add('show');
 }
 
 function practice() {
-  let t; do { t = C[Math.floor(Math.random() * C.length)].id; } while (t === dailyTarget && C.length > 1);
-  start('practice', t);
+  let t; do { t = C[Math.floor(Math.random() * C.length)].id; } while (t === dailyTarget);
+  start('practice', t, 'p' + Math.random());
+  zoomToAlive(true);
 }
 
 // ---------- events ----------
 const tip = $('#tip');
 gC.addEventListener('pointermove', e => {
   const id = e.target.dataset?.id;
-  if (!id || els[id].classList.contains('gone')) { tip.style.opacity = 0; return; }
-  const R = $('#mapcard').getBoundingClientRect();
+  if (!id || !S.alive.has(id) || S.busy) { tip.style.opacity = 0; return; }
+  const R = $('#plate').getBoundingClientRect();
   tip.textContent = byId[id].n; tip.style.left = (e.clientX - R.left) + 'px'; tip.style.top = (e.clientY - R.top) + 'px'; tip.style.opacity = 1;
 });
 gC.addEventListener('pointerleave', () => tip.style.opacity = 0);
@@ -586,23 +572,30 @@ gC.addEventListener('click', e => {
   select(S.sel === id ? null : id);
 });
 $('#guessBtn').onclick = () => guess($('#guessIn').value);
+$('#skipBtn').onclick = skip;
 $('#guessIn').addEventListener('keydown', e => { if (e.key === 'Enter') guess(e.target.value); });
-$('#guessIn').addEventListener('input', e => { const c = byName[e.target.value.trim().toLowerCase()]; if (c && S.alive.has(c.id)) { if (S.sel) els[S.sel].classList.remove('sel'); S.sel = c.id; els[c.id].classList.add('sel'); } });
+$('#guessIn').addEventListener('input', e => {
+  const c = byName[e.target.value.trim().toLowerCase()];
+  if (S.sel) els[S.sel].classList.remove('sel');
+  S.sel = c && S.alive.has(c.id) ? c.id : null;
+  if (S.sel) els[S.sel].classList.add('sel');
+});
 $('#howBtn').onclick = () => $('#howModal').classList.add('show');
 $('#statsBtn').onclick = () => {
-  $('#endSheet').innerHTML = `<h3>Your stats</h3>${statsHTML()}<div class="row"><button class="btn" data-close>Close</button></div>`;
+  $('#endCard').innerHTML = `<h2>Your stats</h2>${statsHTML()}<div class="row"><button class="btn" data-close>Close</button></div>`;
   $('#endModal').classList.add('show');
 };
 $('#practiceBtn').onclick = practice;
 document.addEventListener('click', e => {
   if (e.target.matches('[data-close]') || e.target.classList.contains('modal')) e.target.closest('.modal').classList.remove('show');
 });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.modal.show').forEach(m => m.classList.remove('show')); });
 
 // ---------- boot ----------
 const saved = store.get('day', null);
-start('daily', dailyTarget, saved && saved.day === dayIndex ? saved.actions : []);
+start('daily', dailyTarget, 'd' + dayIndex, saved && saved.day === dayIndex ? saved.actions : []);
 if (!store.get('seenHow', false)) { $('#howModal').classList.add('show'); store.set('seenHow', true); }
-if (saved && saved.day === dayIndex && saved.actions.length && !S.done) zoomToAlive();
+if (!S.done && !(saved && saved.day === dayIndex && saved.actions.length)) zoomToAlive(true);
 })();
 </script>
 </body>
